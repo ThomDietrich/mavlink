@@ -6,7 +6,7 @@
     <enums>
         <!-- Swarming types -->
         <!-- formations are defined for a group, the position of each MAV depends on it's group-internal id and the group size -->
-        <Enumerationname="MAV_SWARM_TYPE">
+        <enum name="MAV_SWARM_TYPE">
             <description>Defines swarming formations.</description>
             <entry value="1" name="MAV_SWARM_TYPE_V">
                 <description>V-Formation</description>
@@ -24,7 +24,7 @@
                 <param index="1">width (number of MAVs in one row)</param>
             </entry>
         </enum>
-        <Enumerationname="MAV_SWARM_JOIN_RESULT">
+        <enum name="MAV_SWARM_JOIN_RESULT">
             <description>Defines possible MAV swarm joining outcomes.</description>
             <entry value="1" name="MAV_SWARM_JOIN_RESULT_SUCCESS">
                 <description>MAV successfully reached it's position in the swarm.</description>
@@ -44,7 +44,7 @@
         </enum>
 
         <!-- Regions -->
-        <Enumerationname="MAV_REGION_OPTION">
+        <enum name="MAV_REGION_OPTION">
             <description>Possible options for a region (can be combined using OR statement).</description>
             <entry value="1" name="MAV_REGION_OPTION_INACTIVE">
                 <description></description>
@@ -61,7 +61,7 @@
         </enum>
 
         <!-- Replacement-MAV -->
-        <Enumerationname="MAV_REPLACE_PRIORITY_RESULT">
+        <enum name="MAV_REPLACE_PRIORITY_RESULT">
             <description>Possible results for the GCS assisted replacement process</description>
             <entry value="1" name="MAV_REPLACE_PRIORITY_RESULT_SUCCESS">
                 <description>An allowed MAV was successfully used as a replacement MAV. (The process has already been completed.)</description>
@@ -78,7 +78,7 @@
         </enum>
 
         <!-- Charging station -->
-        <Enumerationname="MAV_CHARGE_POINT_STATUS">
+        <enum name="MAV_CHARGE_POINT_STATUS">
             <description>Possible states of a charging station (see CHARGE_CONFIRM for an additional information)</description>
             <entry value="1" name="MAV_CHARGE_POINT_STATUS_FREE">
                 <description>Charging station is operating and free. Landing is allowed.</description>
@@ -90,7 +90,7 @@
                 <description>Charging station is out of operation now.</description>
             </entry>
         </enum>
-        <Enumerationname="MAV_CHARGE_RESULT">
+        <enum name="MAV_CHARGE_RESULT">
             <description>Possible results of a charging process</description>
             <entry value="1" name="MAV_CHARGE_RESULT_FULL">
                 <description>Fully charged</description>
@@ -101,7 +101,7 @@
         </enum>
 
         <!-- Commands (Instructions) -->
-        <Enumerationname="MAV_CMD">
+        <enum name="MAV_CMD">
             <description>[...]</description>
             <!-- GROUP CONTROL -->
             <entry value="1" name="MAV_CMD_DO_SET_GROUP">
