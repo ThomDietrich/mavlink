@@ -1,0 +1,434 @@
+<?xml version='1.0'?>
+<!-- MAVLink extension for multiMAV coordination -->
+<mavlink>
+    <include>common.xml</include>
+    <version>1</version>
+    <enums>
+        <!-- Swarming types -->
+        <!-- formations are defined for a group, the position of each MAV depends on it's group-internal id and the group size -->
+        <Enumerationname="MAV_SWARM_TYPE">
+            <description>Defines swarming formations.</description>
+            <entry value="1" name="MAV_SWARM_TYPE_V">
+                <description>V-Formation</description>
+                <param index="1">angle (in degrees)</param>
+            </entry>
+            <entry value="2" name="MAV_SWARM_TYPE_X">
+                <description>X-Formation</description>
+                <param index="1">angle (in degrees)</param>
+            </entry>
+            <entry value="3" name="MAV_SWARM_TYPE_CIRCLE">
+                <description>Circle-Formation</description>
+            </entry>
+            <entry value="4" name="MAV_SWARM_TYPE_GRID">
+                <description>Uniform matrix grid</description>
+                <param index="1">width (number of MAVs in one row)</param>
+            </entry>
+        </enum>
+        <Enumerationname="MAV_SWARM_JOIN_RESULT">
+            <description>Defines possible MAV swarm joining outcomes.</description>
+            <entry value="1" name="MAV_SWARM_JOIN_RESULT_SUCCESS">
+                <description>MAV successfully reached it's position in the swarm.</description>
+            </entry>
+            <entry value="2" name="MAV_SWARM_JOIN_RESULT_UNREACHABLE">
+                <description>MAV is not able to reach it's position in the swarm.</description>
+            </entry>
+            <entry value="3" name="MAV_SWARM_JOIN_RESULT_NO_SWARM">
+                <description>MAV is not part of a valid swarm.</description>
+            </entry>
+            <entry value="4" name="MAV_SWARM_JOIN_RESULT_OCCUPIED">
+                <description>MAV position was already occupied by another MAV. This is a critical error and should be analyzed.</description>
+            </entry>
+            <entry value="5" name="MAV_SWARM_JOIN_RESULT_FAILED">
+                <description>MAV is not able to occupy a position for any other reason.</description>
+            </entry>
+        </enum>
+
+        <!-- Regions -->
+        <Enumerationname="MAV_REGION_OPTION">
+            <description>Possible options for a region (can be combined using OR statement).</description>
+            <entry value="1" name="MAV_REGION_OPTION_INACTIVE">
+                <description></description>
+            </entry>
+            <entry value="2" name="MAV_REGION_OPTION_NO_LAND">
+                <description>Landing is forbidden. For this region, Z-coordinate would be ignored.</description>
+            </entry>
+            <entry value="3" name="MAV_REGION_OPTION_NO_FLY">
+                <description>Flight through this region is not allowed.</description>
+            </entry>
+            <entry value="4" name="MAV_REGION_OPTION_EMERGENCY_LANDING">
+                <description>Emergency landing region. In case if there is a need in emergency landing, the next accessible emergency landing region will be used. This option can't be used with options above.</description>
+            </entry>
+        </enum>
+
+        <!-- Replacement-MAV -->
+        <Enumerationname="MAV_REPLACE_PRIORITY_RESULT">
+            <description>Possible results for the GCS assisted replacement process</description>
+            <entry value="1" name="MAV_REPLACE_PRIORITY_RESULT_SUCCESS">
+                <description>An allowed MAV was successfully used as a replacement MAV. (The process has already been completed.)</description>
+            </entry>
+            <entry value="2" name="MAV_REPLACE_PRIORITY_RESULT_NONE_ALLOWED">
+                <description>There is no MAV from a priority list, which can be used as replacement for the MAV.</description>
+            </entry>
+            <entry value="3" name="MAV_REPLACE_PRIORITY_RESULT_TIMEOUT">
+                <description>The replacement process was aborted because it reached the timeout.</description>
+            </entry>
+            <entry value="4" name="MAV_REPLACE_PRIORITY_RESULT_FAILED">
+                <description>The replacement process was aborted because of any other reason.</description>
+            </entry>
+        </enum>
+
+        <!-- Charging station -->
+        <Enumerationname="MAV_CHARGE_POINT_STATUS">
+            <description>Possible states of a charging station (see CHARGE_CONFIRM for an additional information)</description>
+            <entry value="1" name="MAV_CHARGE_POINT_STATUS_FREE">
+                <description>Charging station is operating and free. Landing is allowed.</description>
+            </entry>
+            <entry value="2" name="MAV_CHARGE_POINT_STATUS_OCCUPIED">
+                <description>Charging station is occupied now.</description>
+            </entry>
+            <entry value="3" name="MAV_CHARGE_POINT_STATUS_DISABLED">
+                <description>Charging station is out of operation now.</description>
+            </entry>
+        </enum>
+        <Enumerationname="MAV_CHARGE_RESULT">
+            <description>Possible results of a charging process</description>
+            <entry value="1" name="MAV_CHARGE_RESULT_FULL">
+                <description>Fully charged</description>
+            </entry>
+            <entry value="2" name="MAV_CHARGE_RESULT_ERROR">
+                <description>Error occured during charging.</description>
+            </entry>
+        </enum>
+
+        <!-- Commands (Instructions) -->
+        <Enumerationname="MAV_CMD">
+            <description>[...]</description>
+            <!-- GROUP CONTROL -->
+            <entry value="1" name="MAV_CMD_DO_SET_GROUP">
+                <description>Command is sent by QGroundControl, instructing MAV to which group it should belong.</description>
+                <param index="1">Group-ID (old Group-ID will be overwritten)</param>
+                <param index="2">ID inside the group (starting from 1)</param>
+                <param index="3">Empty</param>
+                <param index="4">Empty</param>
+                <param index="5">Empty</param>
+                <param index="6">Empty</param>
+                <param index="7">Empty</param>
+            </entry>
+            <entry value="2" name="MAV_CMD_DO_SET_GROUP_UPDATE">
+                <description>Command is sent by QGroundControl, instructing all MAVs to which group they should belong, who will be the group leader and how many group members exist. Previous group leaders lose their status.</description>
+                <param index="1">Group-ID</param>
+                <param index="2">ID inside the group (ID of a new group leader).</param>
+                <param index="3">Number of group members.</param>
+                <param index="4">Empty</param>
+                <param index="5">Empty</param>
+                <param index="6">Empty</param>
+                <param index="7">Empty</param>
+            </entry>
+
+            <!-- SWARM / FORMATION -->
+            <entry value="3" name="MAV_CMD_DO_SET_SWARM">
+                <description>Apply a swarm formation. Each formation requires four parameters at most. (see EnumerationMAV_SWARM_TYPE).</description>
+                <param index="1">Group-ID</param>
+                <param index="2">Formation (see EnumerationMAV_SWARM_TYPE)</param>
+                <param index="3">Scaling in cm (e.g., "100" for one meter as a basic unit)</param>
+                <param index="4">Spezifisch</param>
+                <param index="5">Spezifisch</param>
+                <param index="6">Spezifisch</param>
+                <param index="7">Spezifisch</param>
+            </entry>
+            <entry value="4" name="MAV_CMD_NAV_JOIN_SWARM">
+                <description>Instruct all group members to begin a swarm construction. The MAV with ID 1 begins first. Then it sends SWARM_JOINED message, so that MAV with ID 2 can start as well.</description>
+                <param index="1">Group-ID</param>
+                <param index="2">Type of the coordinate system (see MAV_FRAME)</param>
+                <param index="3">x-coordinate of a group member with ID 1 (leader)</param>
+                <param index="4">y-coordinate of a group member with ID 1 (leader)</param>
+                <param index="5">z-coordinate of a group member with ID 1 (leader)</param>
+                <param index="6">Empty</param>
+                <param index="7">Empty</param>
+            </entry>
+
+            <!-- Navigation -->
+            <entry value="5" name="MAV_CMD_DO_HEAD">
+                <description>Flight with a constant speed in the specified direction.</description>
+                <param index="1">Group-ID (can be set to "0" if individual MAV is meant)</param>
+                <param index="2">Type of the coordinate system (see MAV_FRAME)</param>
+                <param index="3">Vector: x-direction</param>
+                <param index="4">Vector: y-direction</param>
+                <param index="5">Vector: z-direction</param>
+                <param index="6">Speed (value)</param>
+                <param index="7">Empty</param>
+            </entry>
+            <entry value="6" name="MAV_CMD_DO_FLY_TO">
+                <description>Flight to the specified waypoint. The MAV will start as soon as the speed is specified (MAV_CMD_DO_CHANGE_SPEED).</description>
+                <param index="1">Group-ID (can be set to "0" if individual MAV is meant)</param>
+                <param index="2">Type of the coordinate system (see MAV_FRAME)</param>
+                <param index="3">x-coordinate</param>
+                <param index="4">y-coordinate</param>
+                <param index="5">Empty</param>
+                <param index="6">Empty</param>
+                <param index="7">Empty</param>
+            </entry>
+        </enum>
+    </enums>
+
+    <messages>
+        <!-- GROUP-CONTROL -->
+        <message id="151" name="SET_GROUP">
+            <description>See EnumerationMAV_CMD_DO_SET_GROUP</description>
+            <field type="uint8_t" name="target_system">System ID</field>
+            <field type="uint8_t" name="group">Group-ID (old Group-ID will be overwritten)</field>
+            <field type="uint8_t" name="member">ID inside the group (starting from 1)</field>
+        </message>
+        <message id="152" name="GROUP_UPDATE">
+            <description>See EnumerationMAV_CMD_DO_SET_GROUP_UPDATE</description>
+            <field type="uint8_t" name="group">Group-ID</field>
+            <field type="uint8_t" name="member">ID inside the group (ID of a new group leader).</field>
+            <field type="uint8_t" name="member_count">Number of group members</field>
+        </message>
+        <message id="153" name="GROUP_REQUEST_ALL">
+            <description>Command is sent by QGroundControl to all MAVs und calls all the members of a group. Called members can answer with GROUP_MEMBER message.</description>
+            <field type="uint8_t" name="group">Group-ID</field>
+        </message>
+        <message id="154" name="GROUP_REQUEST">
+            <description>Command is sent by QGroundControl to all MAVs und calls the specified member of a group. Called member can answer with GROUP_MEMBER message.</description>
+            <field type="uint8_t" name="group">Group-ID</field>
+            <field type="uint8_t" name="member">ID inside the group (starting from 1)</field>
+        </message>
+        <message id="155" name="GROUP_MEMBER">
+            <description>Answer to GROUP_REQUEST or GROUP_REQUEST_ALL</description>
+            <field type="uint8_t" name="group">Group-ID</field>
+            <field type="uint8_t" name="member">ID inside the group (starting from 1)</field>
+        </message>
+
+        <!-- SWARM / FORMATION -->
+        <message id="156" name="SET_SWARM">
+            <description>See MAV_CMD_DO_SET_SWARM</description>
+            <field type="uint8_t" name="group">Group-ID</field>
+            <field type="uint8_t" name="swarm">Formation (see EnumerationMAV_SWARM_TYPE)</field>
+            <field type="float" name="scaling">Scaling in cm</field>
+            <field type="uint8_t" name="1">Specific</field>
+            <field type="uint8_t" name="2">Specific</field>
+            <field type="uint8_t" name="3">Specific</field>
+        </message>
+        <message id="157" name="SWARM_JOIN">
+            <description>See MAV_CMD_NAV_JOIN_SWARM</description>
+            <field type="uint8_t" name="group">Group-ID</field>
+            <field type="uint8_t" name="frame">Type of the coordinate system (see MAV_FRAME)</field>
+            <field type="float" name="x">x-coordinate of a group member with ID 1 (leader)</field>
+            <field type="float" name="y">y-coordinate of a group member with ID 1 (leader)</field>
+            <field type="float" name="z">z-coordinate of a group member with ID 1 (leader)</field>
+        </message>
+        <message id="158" name="SWARM_JOINED">
+            <description>Command is sent from the MAV to all other MAVs to inform them about successfull or not successfull operation of joining swarm and coordinates of the MAV's position.</description>
+            <field type="uint8_t" name="result">Success or failure (see EnumerationMAV_SWARM_JOIN_RESULT)</field>
+            <field type="uint8_t" name="frame">Type of the coordinate system (see MAV_FRAME)</field>
+            <field type="float" name="x">new x-coordinate of MAVs</field>
+            <field type="float" name="y">new y-coordinate of MAVs</field>
+            <field type="float" name="z">new z-coordinate of MAVs</field>
+        </message>
+
+        <!-- Regions -->
+        <message id="159" name="REGION_CLEAR">
+            <description>Remove the region. Can be necessary if the region needs to be redefined.</description>
+            <field type="uint8_t" name="target_group">Group-ID</field>
+            <field type="uint8_t" name="target_system">System ID</field>
+            <field type="uint8_t" name="region_id">ID of the region</field>
+        </message>
+        <message id="160" name="REGION_CLEAR_ALL">
+            <description>Remove all regions.</description>
+            <field type="uint8_t" name="target_group">Group-ID</field>
+            <field type="uint8_t" name="target_system">System ID</field>
+        </message>
+        <message id="161" name="REGION_DEFINE_POLYGON">
+            <description>The beginning of the region definition in terms of a spanned polygon. This message requires REGION_POLYGON_EDGE message, where vertices of the polygon are defined.</description>
+            <field type="uint8_t" name="target_group">Group-ID</field>
+            <field type="uint8_t" name="target_system">System ID</field>
+            <field type="uint8_t" name="region_id">ID of the region</field>
+            <field type="uint8_t" name="options">Defines, what is allowed or forbidden (see EnumerationMAV_REGION_OPTION).</field>
+            <field type="uint8_t" name="edge_count">Number of vertices of the polygon</field>
+            <field type="uint8_t" name="frame">Type of the coordinate system (see MAV_FRAME)</field>
+            <field type="float" name="z">z-coordinate of the lower surface of the polygon region. The symbol "- infinity" defines the region starting everywhere from the ground level.</field>
+            <field type="float" name="height">Height of the polygonal region. The symbol "+ infinity" defines the region with infinite height.</field>
+        </message>
+        <message id="162" name="REGION_POLYGON_EDGE_REQUEST">
+            <description>Request a vertex of a polygonal region</description>
+            <field type="uint8_t" name="target_group">Group-ID</field>
+            <field type="uint8_t" name="target_system">System ID</field>
+            <field type="uint8_t" name="seq_no">Sequence number (i-t vertice of a polygon)</field>
+            <field type="uint8_t" name="count">Number of vertices requested (from the i-t vertice of a polygon, in between 1 and 6)</field>
+            <field type="uint8_t" name="region_id">ID of the region</field>
+        </message>
+        <message id="163" name="REGION_POLYGON_EDGE">
+            <description>Definition of a vertex of a polygonal region. (the maximum numbers of vertices is 6, because the message should not be bigger than 64 Byte [--> Fragmentation].)</description>
+            <field type="uint8_t" name="target_group">Group-ID</field>
+            <field type="uint8_t" name="target_system">System ID</field>
+            <field type="uint8_t" name="seq_no">Sequence number</field>
+            <field type="uint8_t" name="count">Number of vertices starting from sequence number seq_no.</field>
+            <field type="uint8_t" name="region_id">ID of the region</field>
+            <field type="float[6]" name="x">x-coordinates</field>
+            <field type="float[6]" name="y">y-coordinates</field>
+        </message>
+        <message id="164" name="REGION_DEFINE_CUBOID">
+            <description>Definition of a cuboid region using two vertices</description>
+            <field type="uint8_t" name="target_group">Group-ID</field>
+            <field type="uint8_t" name="target_system">System ID</field>
+            <field type="uint8_t" name="region_id">ID of the region</field>
+            <field type="uint8_t" name="options">Defines, what is allowed or forbidden (see EnumerationMAV_REGION_OPTION).</field>
+            <field type="float" name="frame">Type of the coordinate system (see MAV_FRAME)</field>
+            <field type="float" name="x1">x-coordinate point 1</field>
+            <field type="float" name="y1">y-coordinate point 1</field>
+            <field type="float" name="z1">z-coordinate point 1 (can get the value "- infinity" or "+ infinity")</field>
+            <field type="float" name="x2">x-coordinate point 2</field>
+            <field type="float" name="y2">y-coordinate point 2</field>
+            <field type="float" name="z2">z-coordinate point 2 (can get the value "- infinity" or "+ infinity")</field>
+        </message>
+        <message id="165" name="REGION_DEFINE_CYLINDER">
+            <description>Definition of a cylinder region using the middle point and radius (using "infinite" height).</description>
+            <field type="uint8_t" name="target_group">Group-ID</field>
+            <field type="uint8_t" name="target_system">System ID</field>
+            <field type="uint8_t" name="region_id">ID of the region</field>
+            <field type="uint8_t" name="options">Defines, what is allowed or forbidden (see EnumerationMAV_REGION_OPTION).</field>
+            <field type="uint8_t" name="frame">Type of the coordinate system (see  MAV_FRAME)</field>
+            <field type="float" name="x">x-coordinate of the bottom surface of the cylinder region.</field>
+            <field type="float" name="y">y-coordinate of the bottom surface of the cylinder region.</field>
+            <field type="float" name="z">z-coordinate of the bottom surface of the cylinder region. The symbol "- infinity" defines the region starting everywhere from the ground level.</field>
+            <field type="float" name="height">Height of the cylinder region. The symbol "+ infinity" defines the region with infinite height.</field>
+            <field type="float" name="radius">Radius of the cylinder</field>
+        </message>
+        <message id="166" name="REGION_SET_OPTIONS">
+            <description>Re-definition of the allowed/forbidden actions in the region</description>
+            <field type="uint8_t" name="target_group">Group-ID</field>
+            <field type="uint8_t" name="target_system">System ID</field>
+            <field type="uint8_t" name="region_id">ID of the region</field>
+            <field type="uint8_t" name="options">Options (see EnumerationMAV_REGION_OPTION).</field>
+        </message>
+
+        <!-- Replacement-MAV instructions and requests -->
+        <message id="167" name="REPLACEMENT_REQUEST">
+            <description>General broadcast message for a MAV replacement. (Detailed data of MAVs states can be requested using SYS_STATUS message). Potential replacement-MAV answers with REPLACEMENT_CONFIRM message.</description>
+            <field type="uint32_t" name="required_sensors">Bit mask with a coded components, which the replacement-UAV should have to be able to achieve mission goals. (See Enumeration MAV_SYS_STATUS_SENSOR)</field>
+            <field type="uint16_t" name="estimated_time_remaining">Estimated remaining time.</field>
+            <field type="uint32_t" name="earliest_event_time">The soonest time to exchange (UNIX-time in seconds).</field>
+            <field type="uint32_t" name="latest_event_time">The latest time to exchange (UNIX-time in seconds).</field>
+            <field type="uint8_t" name="priority">Mission priority (from 0 to 9, from low to high priority)</field>
+            <field type="uint8_t" name="frame">Type of the coordinate system (see MAV_FRAME)</field>
+            <field type="float" name="rendezvous_x">x-coordinate of a meeting point with the replacement-MAV</field>
+            <field type="float" name="rendezvous_y">y-coordinate of a meeting point with the replacement-MAV</field>
+            <field type="float" name="rendezvous_z">z-coordinate of a meeting point with the replacement-MAV</field>
+        </message>
+        <message id="168" name="REPLACEMENT_CONFIRM">
+            <description>Answer from the potential replacement-MAV to a REPLACEMENT_REQUEST message.</description>
+            <field type="uint8_t" name="target_system">System ID</field>
+            <field type="uint16_t" name="estimated_time">Estimated remaining time of the MAV flight.</field>
+            <field type="uint8_t" name="frame">Type of the coordinate system (see MAV_FRAME)</field>
+            <field type="float" name="x">x-coordinate (MAV position)</field>
+            <field type="float" name="y">y-coordinate (MAV position)</field>
+            <field type="float" name="z">z-coordinate (MAV position)</field>
+        </message>
+        <message id="169" name="REPLACEMENT_PRIORITY">
+            <description>Message can be sent by QGroundControl (QGC) as an answer to REPLACEMENT_REQUEST message. In this message, replacement-MAVs can be specified (using System-ID). When the replacement process is finished (success or failure), a message REPLACEMENT_PRIORITY_CONFIRM-Nachricht is sent to QGC.</description>
+            <field type="uint8_t" name="target_system">System ID</field>
+            <field type="uint8_t" name="replace_count">Length of the list (in between 0 and 10); "0": any MAV is approved</field>
+            <field type="uint8_t[10]" name="replace_system">System-ID of potential replacement-MAVs (Index 1 = the highest priority)</field>
+            <field type="uint16_t" name="wait_time">Waiting time for the replacement-MAV (from replace_system) to come</field>
+        </message>
+        <message id="170" name="REPLACEMENT_PRIORITY_CONFIRM">
+            <description>Message should be send by MAV as an answer to REPLACEMENT_PRIORITY message. The message informs QGroundControl about the outcome of the replacement process.</description>
+            <field type="uint8_t" name="target_system">System ID</field>
+            <field type="uint8_t" name="replace_system">System-ID of the replacement-MAVs</field>
+            <field type="uint8_t" name="replace_result">Result of the replacement process (see Enumeration MAV_REPLACE_PRIORITY_RESULT)</field>
+        </message>
+        <message id="171" name="REPLACEMENT_ACKNOWLEDGE">
+            <description>Answer to a REPLACEMENT_CONFIRM message.</description>
+            <field type="uint8_t" name="target_system">System ID</field>
+            <field type="uint8_t" name="ack">Positive or negative acknowledgment.
+                // "1": MAV, which has received this message, got elected as replacement-MAV (replacement-MAV will receive all mission related data from the old MAV).
+                //      The whole process is finished with REPLACEMENT_FINALIZE message.;
+                // "0": MAV, which has received this message, will not be used as a replacement-MAV (the connection is closed immediately)
+            </field>
+        </message>
+        <message id="172" name="REPLACEMENT_FINALIZE">
+            <description>The new (replacement-)MAV confirms that it replaces the old MAV. The old MAV should answer with REPLACEMENT_FINILIZE_END message.</description>
+            <field type="uint8_t" name="target_system">System ID</field>
+        </message>
+        <message id="173" name="REPLACEMENT_FINALIZE_END">
+            <description>The old MAV confirms that it is replaced already.</description>
+            <field type="uint8_t" name="target_system">System ID</field>
+            <field type="uint8_t" name="first_source_system">System ID of a contracted MAV (from QGroundControl)</field>
+        </message>
+
+        <!-- Charging stations -->
+        <message id="174" name="CHARGE_POINTS_ANNOUNCE">
+            <description>The number of charging stations</description>
+            <field type="uint8_t" name="target_group">Group-ID</field>
+            <field type="uint8_t" name="target_system">System ID</field>
+            <field type="uint8_t" name="frame">Type of the coordinate system (see MAV_FRAME)</field>
+            <field type="uint8_t" name="count">The number of charging stations</field>
+        </message>
+        <message id="175" name="CHARGE_POINT_REQUEST">
+            <description>The charging station with a specified sequence number.</description>
+            <field type="uint8_t" name="target_group">Group-ID</field>
+            <field type="uint8_t" name="target_system">System ID</field>
+            <field type="uint8_t" name="seq_no">Sequence number (i-t charging station)</field>
+        </message>
+        <message id="176" name="CHARGE_POINT">
+            <description>Place of the charging station</description>
+            <field type="uint8_t" name="target_group">Group-ID</field>
+            <field type="uint8_t" name="target_system">System ID</field>
+            <field type="uint8_t" name="seq_no">Sequence number</field>
+            <field type="uint8_t" name="charge_system">System-ID of the charging station</field>
+            <field type="float" name="x">x-coordinate of the charging station</field>
+            <field type="float" name="y">y-coordinate of the charging station</field>
+            <field type="float" name="z">z-coordinate of the charging station</field>
+            <field type="float" name="x_orient">Orientation of the charging station in x-direction</field>
+            <field type="float" name="y_orient">Orientation of the charging station in y-direction</field>
+            <field type="float" name="z_orient">Orientation of the charging station in z-direction</field>
+        </message>
+        <message id="177" name="CHARGE_POINT_HEAD">
+            <description>Message is sent by a MAV before the flight to a charging station. The state of batteries can be obtained using BATTERY_STATUS (for example, from QGroundControl).</description>
+            <field type="uint8_t" name="charge_system">System-ID of the charging station</field>
+            <field type="float" name="x">x-coordinate of the charging station</field>
+            <field type="float" name="y">y-coordinate of the charging station</field>
+            <field type="float" name="z">z-coordinate of the charging station</field>
+        </message>
+        <message id="178" name="CHARGE_REQUEST">
+            <description>Message is sent by a MAV to a charging station in order to request charging.</description>
+            <field type="uint8_t" name="target_system">System-ID of the charging station</field>
+        </message>
+        <message id="179" name="CHARGE_CONFIRM">
+            <description>Message is sent from a charging station to a MAV in order to share the state of a charging station. If the charging station is free (status == MAV_CHARGE_POINT_STATUS_FREE), CHARGE_BEGIN message is sent to the MAV.
+            </description>
+            <field type="uint8_t" name="target_system">System-ID of the MAV</field>
+            <field type="uint8_t" name="status">see EnumerationMAV_CHARGE_POINT_STATUS</field>
+            <field type="uint32_t" name="wait_time">If charging station is occupied (status == MAV_CHARGE_POINT_STATUS_OCCUPIED), this field shows how long this station will be occupied in seconds.</field>
+        </message>
+        <message id="180" name="CHARGE_BEGIN">
+            <description>After this message is sent by the MAV, the charging station is busy and the MAV starts landing. Immediately after the landing, the charging process is started.</description>
+            <field type="uint8_t" name="target_system">System-ID of the charging station</field>
+        </message>
+        <message id="181" name="CHARGE_END">
+            <description>Message is sent by the charging station to the MAV in case of end of the charging process (full batteries or a failure). After this message, the MAV should leave the station.</description>
+            <field type="uint8_t" name="target_system">System-ID of the MAV</field>
+            <field type="uint8_t" name="result">Result of the charging process (from the point of view of the charging station; see EnumerationMAV_CHARGE_RESULT)</field>
+        </message>
+
+        <!-- Navigation -->
+        <message id="182" name="NAV_HEAD">
+            <description>See Commands MAV_CMD_DO_HEAD</description>
+            <field type="uint8_t" name="target_group">Group-ID (can be set to "0" if a specific MAV is meant)</field>
+            <field type="uint8_t" name="frame">Type of the coordinate system (see MAV_FRAME)</field>
+            <field type="float" name="x_direction">Vector: x-direction</field>
+            <field type="float" name="y_direction">Vector: y-direction</field>
+            <field type="float" name="z_direction">Vector: z-direction</field>
+            <field type="float" name="speed">Speed (m/sec)</field>
+        </message>
+
+        <message id="183" name="NAV_SECURITY_AREA">
+            <description>Definition of an area (if a form of a sphere), where no other MAVs are allowed.</description>
+            <field type="uint8_t" name="target_group">Group-ID (can be set to "0" if a specific MAV is meant)</field>
+            <field type="uint8_t" name="target_system">System-ID</field>
+            <field type="float" name="radius">Radius in centimeters</field>
+        </message>
+
+    </messages>
+</mavlink>
