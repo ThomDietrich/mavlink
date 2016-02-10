@@ -104,7 +104,7 @@
         <enum name="MAV_CMD">
             <description>[...]</description>
             <!-- GROUP CONTROL -->
-            <entry value="1" name="MAV_CMD_DO_SET_GROUP">
+            <entry value="1" name="MAV_CMD_DO_GROUP_SET">
                 <description>Command is sent by QGroundControl, instructing MAV to which group it should belong.</description>
                 <param index="1">Group ID (old group ID will be overwritten)</param>
                 <param index="2">Group member ID (unique inside group, starting from 1)</param>
@@ -114,7 +114,7 @@
                 <param index="6">Empty</param>
                 <param index="7">Empty</param>
             </entry>
-            <entry value="2" name="MAV_CMD_DO_SET_GROUP_UPDATE">
+            <entry value="2" name="MAV_CMD_DO_GROUP_UPDATE">
                 <description>Command is sent by QGroundControl, instructing all MAVs to which group they should belong, who will be the group leader and how many group members exist. Previous group leaders lose their status.</description>
                 <param index="1">Group ID</param>
                 <param index="2">Group member ID (ID of a new group leader).</param>
@@ -126,7 +126,7 @@
             </entry>
 
             <!-- SWARM / FORMATION -->
-            <entry value="3" name="MAV_CMD_DO_SET_SWARM">
+            <entry value="3" name="MAV_CMD_DO_SWARM_SET">
                 <description>Apply a swarm formation. Each formation requires four parameters at most. (see MAV_SWARM_TYPE enum).</description>
                 <param index="1">Group ID</param>
                 <param index="2">Formation (see MAV_SWARM_TYPE enum)</param>
@@ -136,7 +136,7 @@
                 <param index="6">MAV_SWARM_TYPE-specific</param>
                 <param index="7">MAV_SWARM_TYPE-specific</param>
             </entry>
-            <entry value="4" name="MAV_CMD_NAV_JOIN_SWARM">
+            <entry value="4" name="MAV_CMD_DO_JOIN_SWARM">
                 <description>Instruct all group members to begin a swarm construction. The MAV with ID 1 begins first. Then it sends SWARM_JOINED message, so that MAV with ID 2 can start as well.</description>
                 <param index="1">Group ID</param>
                 <param index="2">Type of the coordinate system (see MAV_FRAME enum)</param>
@@ -173,14 +173,14 @@
 
     <messages>
         <!-- GROUP-CONTROL -->
-        <message id="151" name="SET_GROUP">
-            <description>See EnumerationMAV_CMD_DO_SET_GROUP</description>
+        <message id="151" name="GROUP_SET">
+            <description>See MAV_CMD_DO_GROUP_SET enum</description>
             <field type="uint8_t" name="target_system">System ID</field>
             <field type="uint8_t" name="group">Group ID (old group ID will be overwritten)</field>
             <field type="uint8_t" name="member">Group member ID (unique inside group, starting from 1)</field>
         </message>
         <message id="152" name="GROUP_UPDATE">
-            <description>See EnumerationMAV_CMD_DO_SET_GROUP_UPDATE</description>
+            <description>See MAV_CMD_DO_GROUP_UPDATE enum</description>
             <field type="uint8_t" name="group">Group ID</field>
             <field type="uint8_t" name="member">Group member ID (ID of a new group leader).</field>
             <field type="uint8_t" name="member_count">Number of group members</field>
@@ -201,8 +201,8 @@
         </message>
 
         <!-- SWARM / FORMATION -->
-        <message id="156" name="SET_SWARM">
-            <description>See MAV_CMD_DO_SET_SWARM</description>
+        <message id="156" name="SWARM_SET">
+            <description>See MAV_CMD_DO_SWARM_SET</description>
             <field type="uint8_t" name="group">Group ID</field>
             <field type="uint8_t" name="swarm">Formation (see MAV_SWARM_TYPE enum)</field>
             <field type="float" name="scaling">Scaling in cm</field>
@@ -306,7 +306,7 @@
         <!-- Replacement-MAV instructions and requests -->
         <message id="167" name="REPLACEMENT_REQUEST">
             <description>General broadcast message for a MAV replacement. (Detailed data of MAVs states can be requested using SYS_STATUS message). Potential replacement-MAV answers with REPLACEMENT_CONFIRM message.</description>
-            <field type="uint32_t" name="required_sensors">Bit mask with a coded components, which the replacement-UAV should have to be able to achieve mission goals. (See Enumeration MAV_SYS_STATUS_SENSOR)</field>
+            <field type="uint32_t" name="required_sensors">Bit mask with a coded components, which the replacement-UAV should have to be able to achieve mission goals (see MAV_SYS_STATUS_SENSOR enum).</field>
             <field type="uint16_t" name="estimated_time_remaining">Estimated remaining time.</field>
             <field type="uint32_t" name="earliest_event_time">The soonest time to exchange (UNIX-time in seconds).</field>
             <field type="uint32_t" name="latest_event_time">The latest time to exchange (UNIX-time in seconds).</field>
