@@ -103,7 +103,7 @@
         <!-- Commands (Instructions) -->
         <enum name="MAV_CMD">
             <description>[...]</description>
-            <!-- GROUP CONTROL -->
+            <!-- Commands: Group-control -->
             <entry value="1" name="MAV_CMD_DO_GROUP_SET">
                 <description>Command is sent by QGroundControl, instructing MAV to which group it should belong.</description>
                 <param index="1">Group ID (old group ID will be overwritten)</param>
@@ -125,7 +125,7 @@
                 <param index="7">Empty</param>
             </entry>
 
-            <!-- SWARM / FORMATION -->
+            <!-- Commands: Swarms / Formation -->
             <entry value="3" name="MAV_CMD_DO_SWARM_SET">
                 <description>Apply a swarm formation. Each formation requires four parameters at most. (see MAV_SWARM_TYPE enum).</description>
                 <param index="1">Group ID</param>
@@ -140,14 +140,14 @@
                 <description>Instruct all group members to begin a swarm construction. The MAV with ID 1 begins first. Then it sends SWARM_JOINED message, so that MAV with ID 2 can start as well.</description>
                 <param index="1">Group ID</param>
                 <param index="2">Type of the coordinate system (see MAV_FRAME enum)</param>
-                <param index="3">x-coordinate of a group member with ID 1 (leader)</param>
-                <param index="4">y-coordinate of a group member with ID 1 (leader)</param>
-                <param index="5">z-coordinate of a group member with ID 1 (leader)</param>
+                <param index="3">x-coordinate of a group member with ID 1</param>
+                <param index="4">y-coordinate of a group member with ID 1</param>
+                <param index="5">z-coordinate of a group member with ID 1</param>
                 <param index="6">Empty</param>
                 <param index="7">Empty</param>
             </entry>
 
-            <!-- Navigation -->
+            <!-- Commands: Navigation -->
             <entry value="5" name="MAV_CMD_DO_HEAD">
                 <description>Flight with a constant speed in the specified direction.</description>
                 <param index="1">Group ID (can be set to "0" if individual MAV is meant)</param>
@@ -172,7 +172,7 @@
     </enums>
 
     <messages>
-        <!-- GROUP-CONTROL -->
+        <!-- Group-control -->
         <message id="151" name="GROUP_SET">
             <description>See MAV_CMD_DO_GROUP_SET enum</description>
             <field type="uint8_t" name="target_system">System ID</field>
@@ -192,15 +192,15 @@
         <message id="154" name="GROUP_REQUEST">
             <description>Command is sent by QGroundControl to all MAVs And calls the specified member of a group. Called member can answer with GROUP_MEMBER message.</description>
             <field type="uint8_t" name="group">Group ID</field>
-            <field type="uint8_t" name="member">Group member ID (unique inside group, starting from 1)</field>
+            <field type="uint8_t" name="member">Group member ID</field>
         </message>
         <message id="155" name="GROUP_MEMBER">
             <description>Answer to GROUP_REQUEST or GROUP_REQUEST_ALL</description>
             <field type="uint8_t" name="group">Group ID</field>
-            <field type="uint8_t" name="member">Group member ID (unique inside group, starting from 1)</field>
+            <field type="uint8_t" name="member">Group member ID</field>
         </message>
 
-        <!-- SWARM / FORMATION -->
+        <!-- Swarms / Formation -->
         <message id="156" name="SWARM_SET">
             <description>See MAV_CMD_DO_SWARM_SET</description>
             <field type="uint8_t" name="group">Group ID</field>
